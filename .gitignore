@@ -1,0 +1,21 @@
+# persönliche Einstellungen (Pfade, evtl. OBS-Passwort)
+config.json
+
+# Backups, Build, Cache
+_backup_*/
+*.bak*
+_build/
+dist/
+build/
+*.spec
+__pycache__/
+*.pyc
+selftest.txt
+
+# Videos und Binaries (FFmpeg kommt beim Build aus dem Zeno-Paket)
+*.mp4
+*.mkv
+*.exe
+*.dll
+*.zip
+*.7z

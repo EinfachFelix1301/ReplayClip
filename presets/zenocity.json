@@ -1,0 +1,128 @@
+{
+  "name": "ZenoCity",
+  "triggers": [
+    {
+      "event": "kill",
+      "region": [
+        0.0,
+        0.17,
+        0.24,
+        0.58
+      ],
+      "keywords": [
+        "getötet"
+      ],
+      "any_of": [
+        "du",
+        "hast"
+      ],
+      "exclude": [
+        "wurde",
+        "dich",
+        "killer",
+        "meter"
+      ],
+      "rearm_s": 4.0
+    },
+    {
+      "event": "death",
+      "region": [
+        0.36,
+        0.6,
+        0.64,
+        0.76
+      ],
+      "keywords": [
+        "bewusstlos"
+      ],
+      "exclude": [],
+      "rearm_s": 30
+    },
+    {
+      "event": "kill",
+      "kind": "template",
+      "template": "zenocity_killdot.png",
+      "ref_height": 720,
+      "match": 0.55,
+      "region": [
+        0.4336,
+        0.3794,
+        0.571,
+        0.6238
+      ],
+      "keywords": [],
+      "rearm_s": 1.5,
+      "color": "red"
+    }
+  ],
+  "jobs": [
+    {
+      "match": "LSPD",
+      "name": "LSPD"
+    },
+    {
+      "match": "FIB",
+      "name": "FIB"
+    },
+    {
+      "match": "SHERIFF",
+      "name": "Sheriff"
+    },
+    {
+      "match": "LSMD",
+      "name": "LSMD"
+    },
+    {
+      "match": "DOJ",
+      "name": "DOJ"
+    },
+    {
+      "match": "BALLAS",
+      "name": "Ballas"
+    },
+    {
+      "match": "GROVE STREET",
+      "name": "Grove Street"
+    },
+    {
+      "match": "VAGOS",
+      "name": "Vagos"
+    },
+    {
+      "match": "FAMILIES",
+      "name": "Families"
+    },
+    {
+      "match": "LOST",
+      "name": "Lost MC"
+    },
+    {
+      "match": "MAFIA",
+      "name": "Mafia"
+    },
+    {
+      "match": "BLOODS",
+      "name": "Bloods"
+    },
+    {
+      "match": "CRIPS",
+      "name": "Crips"
+    },
+    {
+      "match": "MARABUNTA",
+      "name": "Marabunta"
+    },
+    {
+      "match": "BENNYS",
+      "name": "Bennys"
+    }
+  ],
+  "intro": {
+    "logo": "zenocity_logo.png",
+    "font": "chakra-petch-700.ttf",
+    "font_sub": "chakra-petch-600.ttf",
+    "color": "#c300ff",
+    "deep": "#720068",
+    "sub_color": "#dd62ff"
+  }
+}
