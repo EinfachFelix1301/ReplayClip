@@ -19,7 +19,7 @@ UI_FILE = Path(getattr(sys, "_MEIPASS", ROOT)) / "killclip" / "ui" / "index.html
 WEB_DATA = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "KillClip" / "webview"
 
 from killclip import autoedit, beats, clips, marker, montage, ncs, obs, preview, titlecard  # noqa: E402
-from killclip.batch import (KILLS_DIR, _load_manifest, find_clips, find_videos,  # noqa: E402
+from killclip.batch import (KILLS_DIR, _load_manifest, find_clips, find_videos, is_own_extra,  # noqa: E402
                             retrim_many, scan_many)
 from killclip.config import Config, key_name  # noqa: E402
 from killclip.job_sort import job_dirs  # noqa: E402
@@ -173,16 +173,17 @@ class Api:
         self._cfg.save()
         self._start_live() if on else self._stop_live()
 
-    def pick_folder(self):
+    def pick_folder(self, deaths=False):
         res = self._window.create_file_dialog(webview.FileDialog.FOLDER, directory=self._cfg.replay_dir)
         if not res:
             return None
         folder = Path(res[0] if isinstance(res, (list, tuple)) else res)
-        videos = find_videos(folder)
-        manifest = _load_manifest(Path(self._cfg.output_dir))
+        videos = self._scan_targets(find_videos(folder), deaths)
+        manifest = _load_manifest(Path(self._cfg.output_dir), deaths)
         new = [v for v in videos if manifest.get(str(v)) != v.stat().st_size]
+        out_name = str(Path(self._cfg.output_dir) / "Tode") if deaths else self._cfg.output_dir
         return {"path": str(folder), "name": folder.name or str(folder), "videos": len(videos),
-                "new": len(new), "out_name": self._cfg.output_dir}
+                "new": len(new), "out_name": out_name}
 
     def pick_files(self):
         res = self._window.create_file_dialog(
@@ -204,9 +205,16 @@ class Api:
         self._start_scan([Path(f) for f in res], Path(self._cfg.output_dir), skip_done=False, deaths_only=True)
         return True
 
-    def scan_folder(self, folder: str):
+    def scan_folder(self, folder: str, deaths=False):
         folder = Path(folder)
-        self._start_scan(find_videos(folder), Path(self._cfg.output_dir), skip_done=True)
+        self._start_scan(find_videos(folder), Path(self._cfg.output_dir), skip_done=True, deaths_only=bool(deaths))
+
+    def _scan_targets(self, files: list[Path], deaths: bool) -> list[Path]:
+        """Kill-Scan: nichts aus dem Ausgabeordner. Tode-Suche: Kill-Clips ja, eigene Tod-Clips/Backups nein."""
+        out_dir = Path(self._cfg.output_dir).resolve()
+        if deaths:
+            return [p for p in files if not is_own_extra(p, out_dir)]
+        return [p for p in files if not p.resolve().is_relative_to(out_dir)]
 
     def retrim_all(self):
         """Alle Clips der Galerie auf den aktuellen Vor-/Nachlauf kürzen."""
@@ -391,8 +399,7 @@ class Api:
     # --- intern ------------------------------------------------------------------------
     def _start_scan(self, files: list[Path], out_dir: Path, skip_done: bool, deaths_only=False):
         out_dir = Path(self._cfg.output_dir).resolve()
-        if not deaths_only:  # Tode-Suche darf auch eigene Kill-Clips aus dem Ausgabeordner durchsuchen
-            files = [p for p in files if not p.resolve().is_relative_to(out_dir)]
+        files = self._scan_targets(files, deaths_only)
         if self._scanning:
             return
         self._scanning = True

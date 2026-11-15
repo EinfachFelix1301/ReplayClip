@@ -317,7 +317,6 @@
           <button data-m="deaths">Tode</button>
         </div>
       </div>
-      <div id="killMode">
       <button class="drop" id="pickFolder">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v5M9.5 13.5 12 11l2.5 2.5"/></svg>
         <div><div class="t" id="folderTitle">Ordner wählen</div><div class="s" id="folderPath">Alle Videos darin werden nach Kills durchsucht</div></div>
@@ -326,13 +325,6 @@
       <div class="row">
         <button class="btn primary" id="startScan" disabled>Scan starten</button>
         <button class="btn small" id="pickFiles" title="Einzelne Videos wählen">Dateien …</button>
-      </div>
-      </div>
-      <div id="deathMode" hidden>
-        <button class="drop" id="pickDeaths">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z"/></svg>
-          <div><div class="t">Clips wählen</div><div class="s">Einzelne Clips – jeder Tod von dir wird ein eigener Clip</div></div>
-        </button>
       </div>
       <div class="progress" id="progress">
         <div class="big"><span id="pPct">0</span>%<small id="pEta"></small></div>
@@ -646,7 +638,6 @@ function setScanning(on) {
   $("startScan").disabled = on || !state.folder;
   $("pickFolder").disabled = on;
   $("pickFiles").disabled = on;
-  $("pickDeaths").disabled = on;
   document.querySelectorAll("#scanMode button").forEach((b) => (b.disabled = on));
   $("retrim").disabled = on;
   $("mRender").disabled = on || !state.montage.length;
@@ -733,7 +724,7 @@ window.kc = {
 function startProgress() { setScanning(true); kc.on({ type: "progress", pct: 0, file: "", index: 0, total: 0 }); }
 
 $("pickFolder").onclick = async () => {
-  const r = await api().pick_folder();
+  const r = await api().pick_folder(state.mode === "deaths");
   if (!r) return;
   state.folder = r.path;
   $("folderTitle").textContent = r.name;
@@ -746,18 +737,31 @@ $("pickFolder").onclick = async () => {
     h("span", { class: "chip" }, "Clips → ", h("b", {}, r.out_name)));
   const btn = $("startScan");
   btn.disabled = r.videos === 0;
-  btn.textContent = r.new ? `${r.new} Video${r.new > 1 ? "s" : ""} scannen` : "Alles schon gescannt";
+  const verb = state.mode === "deaths" ? "nach Toden durchsuchen" : "scannen";
+  btn.textContent = r.new ? `${r.new} Video${r.new > 1 ? "s" : ""} ${verb}` : "Alles schon durchsucht";
   btn.disabled = r.new === 0;
 };
-$("startScan").onclick = () => { if (state.folder) { startProgress(); api().scan_folder(state.folder); } };
-$("pickFiles").onclick = async () => { if (await api().pick_files()) startProgress(); };
-$("pickDeaths").onclick = async () => { if (await api().pick_death_clips()) startProgress(); };
+$("startScan").onclick = () => {
+  if (state.folder) { startProgress(); api().scan_folder(state.folder, state.mode === "deaths"); }
+};
+$("pickFiles").onclick = async () => {
+  const ok = state.mode === "deaths" ? await api().pick_death_clips() : await api().pick_files();
+  if (ok) startProgress();
+};
 
 function setScanMode(mode) {
   const deaths = mode === "deaths";
-  $("killMode").hidden = deaths;
-  $("deathMode").hidden = !deaths;
   $("scanTitle").textContent = deaths ? "Tode suchen" : "Ordner scannen";
+  // Ordnerwahl gilt nur für einen Modus (eigenes Scan-Gedächtnis) -> beim Umschalten zurücksetzen
+  state.folder = null;
+  $("folderTitle").textContent = "Ordner wählen";
+  $("folderPath").textContent = deaths ? "Alle Videos darin werden nach deinen Toden durchsucht"
+                                       : "Alle Videos darin werden nach Kills durchsucht";
+  $("folderMeta").hidden = true;
+  $("startScan").disabled = true;
+  $("startScan").textContent = deaths ? "Tode suchen" : "Scan starten";
+  $("pickFiles").textContent = deaths ? "Clips …" : "Dateien …";
+  $("pickFiles").title = deaths ? "Einzelne Clips nach Toden durchsuchen" : "Einzelne Videos wählen";
   state.mode = deaths ? "deaths" : "kills";
   state.filter = "all";
   $("tabs").hidden = deaths;   // Multi-Kills gibt es bei Toden nicht

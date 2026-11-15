@@ -135,11 +135,25 @@ def find_videos(folder: Path) -> list[Path]:
                   if p.suffix.lower() in VIDEO_EXT and out not in p.parents)
 
 
-def _load_manifest(out_dir: Path) -> dict:
+def manifest_path(out_dir: Path, deaths_only=False) -> Path:
+    """Kill-Scan und Tode-Suche merken sich getrennt, was schon durchsucht ist."""
+    return clips.deaths_root(out_dir) / MANIFEST if deaths_only else Path(out_dir) / MANIFEST
+
+
+def _load_manifest(out_dir: Path, deaths_only=False) -> dict:
     try:
-        return json.loads((out_dir / MANIFEST).read_text(encoding="utf-8"))
+        return json.loads(manifest_path(out_dir, deaths_only).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
+
+
+def is_own_extra(path: Path, output_dir: Path) -> bool:
+    """Tod-Clips, Backups (_Original …), Montagen und Musik im Ausgabeordner – nie erneut durchsuchen."""
+    try:
+        rel = path.resolve().relative_to(Path(output_dir).resolve())
+    except ValueError:
+        return False
+    return any(d.startswith("_") or d.lower() in {"tode", "montagen", "musik"} for d in rel.parts[:-1])
 
 
 def scan_many(files: list[Path], out_dir: Path, cfg: Config, log, progress, cancel: threading.Event,
@@ -147,10 +161,11 @@ def scan_many(files: list[Path], out_dir: Path, cfg: Config, log, progress, canc
     """Scannt mehrere Videos nach out_dir. progress(dict) mit Gesamtstand und Restzeit.
 
     Bereits gescannte Dateien (gleiche Größe) stehen in out_dir/.killclip.json und werden übersprungen.
-    Die Tode-Suche trägt nichts ins Manifest ein (sonst überspringt der Kill-Scan die Datei später).
+    Die Tode-Suche hat ihr eigenes Gedächtnis in out_dir/Tode/.killclip.json.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    manifest = _load_manifest(out_dir)
+    manifest = _load_manifest(out_dir, deaths_only)
+    mpath = manifest_path(out_dir, deaths_only)
     todo = [f for f in files if not (skip_done and manifest.get(str(f)) == f.stat().st_size)]
     if len(todo) < len(files):
         log(f"{len(files) - len(todo)} Datei(en) schon gescannt – übersprungen")
@@ -189,10 +204,9 @@ def scan_many(files: list[Path], out_dir: Path, cfg: Config, log, progress, canc
         if written is not None:
             total_clips += len(written)
             log(f"{path.name}: {len(written)} {'Tod-' if deaths_only else ''}Clip(s)")
-            if deaths_only:
-                continue
             manifest[str(path)] = path.stat().st_size
-            (out_dir / MANIFEST).write_text(json.dumps(manifest, indent=1, ensure_ascii=False), encoding="utf-8")
+            mpath.parent.mkdir(parents=True, exist_ok=True)
+            mpath.write_text(json.dumps(manifest, indent=1, ensure_ascii=False), encoding="utf-8")
     return total_clips
 
 
