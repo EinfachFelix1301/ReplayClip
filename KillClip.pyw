@@ -31,7 +31,7 @@ THUMB_DIR = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "KillClip" / "thumbs"
 CLIP_NAME = re.compile(r"^(?P<label>kill\d*(?:_death)?|death)_(?P<ts>\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})")
 
 
-SPECIAL_DIRS = {"montagen", "musik"}
+SPECIAL_DIRS = {"montagen", "musik", "tode"}
 CLIP_ROOTS: list = []   # Ausgabe- und Kills-Ordner (für „Job = Unterordner“)
 
 
@@ -131,15 +131,17 @@ class Api:
 
         def load_gallery():
             folders = [Path(self._cfg.output_dir), *map(Path, self._cfg.kill_folders)]
+            folders += [clips.deaths_root(f) for f in folders]
             CLIP_ROOTS[:] = [str(f) for f in folders]
-            seen = set()
-            files = []
-            for folder in folders:
-                if folder.is_dir() and folder not in seen:
-                    seen.add(folder)
-                    files += [p for d in (folder, *job_dirs(folder)) for p in d.glob("*.mp4")]
-            for f in sorted(set(files), key=lambda p: p.name, reverse=True)[:200]:
-                self._push_clip(f)
+            files = set()
+            for folder in dict.fromkeys(folders):
+                if folder.is_dir():
+                    files.update(p for d in (folder, *job_dirs(folder)) for p in d.glob("*.mp4"))
+            # Kills und Tode getrennt begrenzen, damit viele Kills die Tode nicht verdrängen
+            for death in (False, True):
+                group = [f for f in files if clips.is_death_label(f.stem) == death]
+                for f in sorted(group, key=lambda p: p.name, reverse=True)[:200]:
+                    self._push_clip(f)
 
         threading.Thread(target=load_gallery, daemon=True).start()
         threading.Thread(target=self._watch_gone, daemon=True).start()
@@ -373,8 +375,12 @@ class Api:
     def cancel_scan(self):
         self._cancel.set()
 
-    def open_output(self):
-        os.startfile(self._cfg.ensure_output())
+    def open_output(self, deaths=False):
+        folder = self._cfg.ensure_output()
+        if deaths:
+            folder = clips.deaths_root(folder)
+            folder.mkdir(exist_ok=True)
+        os.startfile(folder)
 
     def open_path(self, path: str):
         os.startfile(path)

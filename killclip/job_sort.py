@@ -19,7 +19,7 @@ from .config import PRESET_DIR
 from .ocr import read_lines
 
 _move_lock = threading.Lock()
-SPECIAL = {"montagen", "musik"}            # dazu alles mit "_" vorne (_Original, _Duplikate, …)
+SPECIAL = {"montagen", "musik", "tode"}            # dazu alles mit "_" vorne (_Original, _Duplikate, …)
 _SKIP = re.compile(r"LEITSTELLE|DIENST|OFFEN|HUNGER|DURST|ANGENOMMEN", re.I)
 # Straßenzeile (GTA-Straßennamen + OCR-Varianten) – zählt nie als Job (sonst wird „Grove St“ zu „Grove Street“)
 _STREET = re.compile(r"\b(ST|STR|SI|RD|RO|AVE|AV|BLVD|BLVO|DR|OR|WAY|LN|PL|PKWY|HWY|FWY|FVVY|APPROACH|AP)\b[ .\-]*"

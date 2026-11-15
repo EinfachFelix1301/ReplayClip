@@ -39,14 +39,36 @@ def clip_time(path: Path) -> datetime | None:
     return datetime.strptime(m[1], "%Y-%m-%d_%H-%M-%S") if m else None
 
 
-def find_duplicate(roots, when: datetime) -> Path | None:
-    """Gibt einen vorhandenen Clip zurück, der denselben Kill zeigt (Ordner + direkte Unterordner)."""
+DEATHS_DIR = "Tode"          # Tod-Clips liegen getrennt von den Kills in <Ausgabe>/Tode
+
+
+def deaths_root(output_dir) -> Path:
+    return Path(output_dir) / DEATHS_DIR
+
+
+def is_death_label(label: str) -> bool:
+    return label.startswith("death")
+
+
+def target_dir(output_dir, label: str) -> Path:
+    """Reine Tod-Clips in den Tode-Ordner, alles mit Kill in den Ausgabeordner."""
+    return deaths_root(output_dir) if is_death_label(label) else Path(output_dir)
+
+
+def find_duplicate(roots, when: datetime, label: str = "kill") -> Path | None:
+    """Gibt einen vorhandenen Clip zurück, der denselben Kill/Tod zeigt (Ordner + direkte Unterordner).
+
+    Kills und Tode werden getrennt verglichen – ein Tod blockiert nie einen Kill-Clip und umgekehrt.
+    """
+    death = is_death_label(label)
     for root in dict.fromkeys(Path(r) for r in roots):
         if not root.is_dir():
             continue
         for clip in (*root.glob("*.mp4"), *root.glob("*/*.mp4")):
             if clip.parent != root and (clip.parent.name.startswith("_") or clip.parent.name == "Montagen"):
                 continue  # _Duplikate, _Fehlerkennung, _Original zählen nicht als vorhanden
+            if is_death_label(clip.stem) != death:
+                continue
             t = clip_time(clip)
             if t and abs((t - when).total_seconds()) <= DUP_WINDOW_S:
                 return clip

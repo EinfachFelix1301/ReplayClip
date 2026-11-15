@@ -404,10 +404,13 @@ class LiveClipper(threading.Thread):
                 self.log(f"⚠ Replay nur {length:.0f} s lang – Vorlauf um {-start:.0f} s kürzer "
                          "(NVIDIA-Puffer war gerade neu gestartet)")
             when = wall - timedelta(seconds=pressed - seg.first)
+            seg_dir = clips.target_dir(cfg.ensure_output(), seg.label)
             with clips.clip_lock:
-                dup = clips.find_duplicate([cfg.ensure_output(), *cfg.kill_folders], when)
+                dup = clips.find_duplicate(
+                    [seg_dir, *(clips.target_dir(f, seg.label) for f in cfg.kill_folders)], when, seg.label)
                 if not dup:
-                    dst = clips.clip_name(cfg.ensure_output(), seg.label, when)
+                    seg_dir.mkdir(parents=True, exist_ok=True)
+                    dst = clips.clip_name(seg_dir, seg.label, when)
                     clips.cut(replay, start, end, dst)
             if dup:
                 self.log(f"Schon vorhanden, übersprungen: {dup.name}")
@@ -418,7 +421,7 @@ class LiveClipper(threading.Thread):
             if cfg.clip_source == "obs" and _is_black(dst, seg.first - seg.start):
                 self.log("⚠ Clip ist schwarz – in OBS zeigt die Spiel-/Bildschirmquelle kein Bild. "
                          "OBS öffnen und die Quelle prüfen (oder „Bildschirmaufnahme“ hinzufügen).")
-            dst = sort_clip(dst, cfg.output_dir, self.log, cfg.preset)
+            dst = sort_clip(dst, seg_dir, self.log, cfg.preset)
             self.log(f"✔ {dst.name} ({end - max(0.0, start):.0f} s)")
             self.on_clip(dst, seg)
             if cfg.delete_replay_after_cut:

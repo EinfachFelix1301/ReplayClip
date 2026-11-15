@@ -107,18 +107,21 @@ def scan_file(path: Path, cfg: Config, out_dir: Path, log, progress, cancel: thr
         segments.append(segmenter.flush())
 
     written = []
-    roots = [cfg.output_dir, out_dir, *cfg.kill_folders]
     for seg in segments:
         end = min(seg.end, length)
         when = started + timedelta(seconds=seg.first)
+        seg_dir = clips.target_dir(out_dir, seg.label)
+        roots = [seg_dir, clips.target_dir(cfg.output_dir, seg.label),
+                 *(clips.target_dir(f, seg.label) for f in cfg.kill_folders)]
         with clips.clip_lock:
-            dup = clips.find_duplicate(roots, when)
+            dup = clips.find_duplicate(roots, when, seg.label)
             if dup:
                 log(f"Schon vorhanden, übersprungen: {dup.name}")
                 continue
-            dst = clips.clip_name(out_dir, seg.label, when)
+            seg_dir.mkdir(parents=True, exist_ok=True)
+            dst = clips.clip_name(seg_dir, seg.label, when)
             clips.cut(path, seg.start, end, dst)
-        dst = sort_clip(dst, cfg.output_dir, log, cfg.preset)
+        dst = sort_clip(dst, clips.target_dir(cfg.output_dir, seg.label), log, cfg.preset)
         written.append(dst)
         on_clip(dst, seg)
     progress(1.0)

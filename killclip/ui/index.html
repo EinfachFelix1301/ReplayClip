@@ -382,7 +382,6 @@
         <div class="tabs" id="tabs">
           <button class="active" data-f="all">Alle</button>
           <button data-f="multi">Multi-Kills</button>
-          <button data-f="death">Tode</button>
         </div>
         <button class="btn small" id="retrim" title="Alle Clips auf den eingestellten Vor-/Nachlauf kürzen">Clips kürzen</button>
         <button class="btn small" id="openOut">Ordner öffnen</button>
@@ -533,7 +532,7 @@
 <script>
 const $ = (id) => document.getElementById(id);
 const api = () => window.pywebview.api;
-const state = { clips: [], filter: "all", folder: null, montage: [], music: null, settings: null, lastMontage: null };
+const state = { mode: "kills", clips: [], filter: "all", folder: null, montage: [], music: null, settings: null, lastMontage: null };
 
 // DOM-Helfer statt HTML-Strings
 function h(tag, props = {}, ...kids) {
@@ -611,17 +610,26 @@ function clipCard(c, i) {
 
 function renderClips() {
   const f = state.filter;
-  const list = state.clips.filter((c) => f === "all" || (f === "multi" ? c.kills > 1 : c.label.startsWith("death")));
-  $("count").textContent = state.clips.length ? `${state.clips.length} gesamt` : "";
+  const deaths = state.mode === "deaths";
+  const base = modeClips();
+  const list = base.filter((c) => f === "all" || c.kills > 1);
+  $("count").textContent = base.length ? `${base.length} gesamt` : "";
   const grid = $("grid");
   if (!list.length) {
     grid.replaceChildren(h("div", { class: "empty" },
       h("div", { class: "ico" }, icon(PLAY, { size: 26, fill: "currentColor" })),
-      h("b", {}, state.clips.length ? "Nichts in diesem Filter" : "Noch keine Clips"),
-      "Wähle links einen Ordner mit Aufnahmen oder spiel mit aktivem Live-Modus."));
+      h("b", {}, base.length ? "Nichts in diesem Filter" : deaths ? "Noch keine Tod-Clips" : "Noch keine Clips"),
+      deaths ? "Wähle links Clips – jeder Tod wird ein eigener Clip im Ordner „Tode“."
+             : "Wähle links einen Ordner mit Aufnahmen oder spiel mit aktivem Live-Modus."));
     return;
   }
   grid.replaceChildren(...list.map(clipCard));
+}
+
+// Kills-Modus zeigt nur Kill-Clips, Tode-Modus nur Tod-Clips
+function modeClips() {
+  const deaths = state.mode === "deaths";
+  return state.clips.filter((c) => c.label.startsWith("death") === deaths);
 }
 
 function upsertClip(c) {
@@ -750,13 +758,18 @@ function setScanMode(mode) {
   $("killMode").hidden = deaths;
   $("deathMode").hidden = !deaths;
   $("scanTitle").textContent = deaths ? "Tode suchen" : "Ordner scannen";
+  state.mode = deaths ? "deaths" : "kills";
+  state.filter = "all";
+  $("tabs").hidden = deaths;   // Multi-Kills gibt es bei Toden nicht
+  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.f === "all"));
+  renderClips();
   document.querySelectorAll("#scanMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === mode));
   try { localStorage.setItem("kc.scanMode", mode); } catch (_) {}
 }
 $("scanMode").onclick = (e) => { const b = e.target.closest("button"); if (b) setScanMode(b.dataset.m); };
 try { setScanMode(localStorage.getItem("kc.scanMode") || "kills"); } catch (_) { setScanMode("kills"); }
 $("cancelScan").onclick = () => api().cancel_scan();
-$("openOut").onclick = () => api().open_output();
+$("openOut").onclick = () => api().open_output(state.mode === "deaths");
 $("retrim").onclick = async () => {
   const pre = $("preset") && document.querySelector('[data-key="pre_s"] span').textContent;
   const post = document.querySelector('[data-key="post_s"] span').textContent;
@@ -921,7 +934,7 @@ const toSort = (val, sec) => val.replace("T", "_").replace(":", "-") + sec;
 $("mRange").onclick = () => {
   if (!$("mFrom").value || !$("mTo").value) return toast("Von und Bis ausfüllen");
   const from = toSort($("mFrom").value, "-00"), to = toSort($("mTo").value, "-59");
-  const hits = state.clips.filter((c) => c.sort >= from && c.sort <= to && !state.montage.some((m) => m.path === c.path));
+  const hits = modeClips().filter((c) => c.sort >= from && c.sort <= to && !state.montage.some((m) => m.path === c.path));
   hits.forEach((c) => state.montage.push(montageItem(c)));
   state.montage.sort((a, b) => a.sort.localeCompare(b.sort));
   player.idx = -1;
