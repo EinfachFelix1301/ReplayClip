@@ -192,6 +192,16 @@ class Api:
         self._start_scan(files, Path(self._cfg.output_dir), skip_done=False)
         return True
 
+    def pick_death_clips(self):
+        """Modus „Tode suchen“: nur einzelne Clips/Videos, jeder eigene Tod wird ein eigener Clip."""
+        res = self._window.create_file_dialog(
+            webview.FileDialog.OPEN, allow_multiple=True, directory=self._cfg.replay_dir,
+            file_types=("Videos (*.mp4;*.mkv;*.mov)", "Alle Dateien (*.*)"))
+        if not res:
+            return False
+        self._start_scan([Path(f) for f in res], Path(self._cfg.output_dir), skip_done=False, deaths_only=True)
+        return True
+
     def scan_folder(self, folder: str):
         folder = Path(folder)
         self._start_scan(find_videos(folder), Path(self._cfg.output_dir), skip_done=True)
@@ -373,9 +383,10 @@ class Api:
         subprocess.Popen(["explorer", "/select,", os.path.normpath(path)])
 
     # --- intern ------------------------------------------------------------------------
-    def _start_scan(self, files: list[Path], out_dir: Path, skip_done: bool):
+    def _start_scan(self, files: list[Path], out_dir: Path, skip_done: bool, deaths_only=False):
         out_dir = Path(self._cfg.output_dir).resolve()
-        files = [p for p in files if not p.resolve().is_relative_to(out_dir)]
+        if not deaths_only:  # Tode-Suche darf auch eigene Kill-Clips aus dem Ausgabeordner durchsuchen
+            files = [p for p in files if not p.resolve().is_relative_to(out_dir)]
         if self._scanning:
             return
         self._scanning = True
@@ -392,11 +403,18 @@ class Api:
                 self._emit(type="progress", **p)
 
         def work():
-            self._log(f"Scan: {len(files)} Video(s) → {out_dir}")
+            what = "Tode suchen" if deaths_only else "Scan"
+            self._log(f"{what}: {len(files)} Video(s) → {out_dir}")
             try:
                 n = scan_many(files, out_dir, self._cfg, self._log, progress, self._cancel,
-                              on_clip=lambda p, _s: self._push_clip(p, fresh=True), skip_done=skip_done)
-                msg = "Scan abgebrochen" if self._cancel.is_set() else f"Scan fertig – {n} Clip(s) in {out_dir.name}"
+                              on_clip=lambda p, _s: self._push_clip(p, fresh=True), skip_done=skip_done,
+                              deaths_only=deaths_only)
+                if self._cancel.is_set():
+                    msg = f"{what} abgebrochen"
+                elif deaths_only:
+                    msg = f"Tode-Suche fertig – {n} Tod-Clip(s) in {out_dir.name}"
+                else:
+                    msg = f"Scan fertig – {n} Clip(s) in {out_dir.name}"
             except Exception as exc:
                 msg = f"Scan-Fehler: {exc}"
             self._scanning = False

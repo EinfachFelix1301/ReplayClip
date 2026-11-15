@@ -84,6 +84,10 @@
   .drop svg { flex: none; color: var(--red); }
   .drop .t { font-weight: 600; }
   .drop .s { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; margin-top: 2px; }
+  .scanhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .scanhead h2 { margin-bottom: 0; }
+  .tabs.mini button { padding: 4px 10px; font-size: 11.5px; }
+  .tabs button:disabled { opacity: .45; pointer-events: none; }
   .meta { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
   .chip { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); }
   .chip b { color: var(--text); font-weight: 600; }
@@ -306,7 +310,14 @@
 <main>
   <aside>
     <div class="card">
-      <h2>Ordner scannen</h2>
+      <div class="scanhead">
+        <h2 id="scanTitle">Ordner scannen</h2>
+        <div class="tabs mini" id="scanMode">
+          <button class="active" data-m="kills">Kills</button>
+          <button data-m="deaths">Tode</button>
+        </div>
+      </div>
+      <div id="killMode">
       <button class="drop" id="pickFolder">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v5M9.5 13.5 12 11l2.5 2.5"/></svg>
         <div><div class="t" id="folderTitle">Ordner wählen</div><div class="s" id="folderPath">Alle Videos darin werden nach Kills durchsucht</div></div>
@@ -315,6 +326,13 @@
       <div class="row">
         <button class="btn primary" id="startScan" disabled>Scan starten</button>
         <button class="btn small" id="pickFiles" title="Einzelne Videos wählen">Dateien …</button>
+      </div>
+      </div>
+      <div id="deathMode" hidden>
+        <button class="drop" id="pickDeaths">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z"/></svg>
+          <div><div class="t">Clips wählen</div><div class="s">Einzelne Clips – jeder Tod von dir wird ein eigener Clip</div></div>
+        </button>
       </div>
       <div class="progress" id="progress">
         <div class="big"><span id="pPct">0</span>%<small id="pEta"></small></div>
@@ -620,6 +638,8 @@ function setScanning(on) {
   $("startScan").disabled = on || !state.folder;
   $("pickFolder").disabled = on;
   $("pickFiles").disabled = on;
+  $("pickDeaths").disabled = on;
+  document.querySelectorAll("#scanMode button").forEach((b) => (b.disabled = on));
   $("retrim").disabled = on;
   $("mRender").disabled = on || !state.montage.length;
 }
@@ -723,6 +743,18 @@ $("pickFolder").onclick = async () => {
 };
 $("startScan").onclick = () => { if (state.folder) { startProgress(); api().scan_folder(state.folder); } };
 $("pickFiles").onclick = async () => { if (await api().pick_files()) startProgress(); };
+$("pickDeaths").onclick = async () => { if (await api().pick_death_clips()) startProgress(); };
+
+function setScanMode(mode) {
+  const deaths = mode === "deaths";
+  $("killMode").hidden = deaths;
+  $("deathMode").hidden = !deaths;
+  $("scanTitle").textContent = deaths ? "Tode suchen" : "Ordner scannen";
+  document.querySelectorAll("#scanMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === mode));
+  try { localStorage.setItem("kc.scanMode", mode); } catch (_) {}
+}
+$("scanMode").onclick = (e) => { const b = e.target.closest("button"); if (b) setScanMode(b.dataset.m); };
+try { setScanMode(localStorage.getItem("kc.scanMode") || "kills"); } catch (_) { setScanMode("kills"); }
 $("cancelScan").onclick = () => api().cancel_scan();
 $("openOut").onclick = () => api().open_output();
 $("retrim").onclick = async () => {

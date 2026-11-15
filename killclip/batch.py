@@ -21,7 +21,11 @@ FRAME_H = 720
 _NV_NAME = re.compile(r"(\d{4})\.(\d{2})\.(\d{2}) - (\d{2})\.(\d{2})\.(\d{2})")
 
 
-def recording_start(path: Path, length: float) -> datetime:
+def recording_start(path: Path, length: float, pre_s: float = 0.0) -> datetime:
+    clip_t = clips.clip_time(path)
+    if clip_t:
+        # eigener KillClip-Clip: heißt nach dem ersten Kill, beginnt Vorlauf-Sekunden davor
+        return clip_t - timedelta(seconds=pre_s)
     m = _NV_NAME.search(path.name)
     if m:
         named = datetime(*map(int, m.groups()))
@@ -67,14 +71,22 @@ MANIFEST = ".killclip.json"
 
 
 def scan_file(path: Path, cfg: Config, out_dir: Path, log, progress, cancel: threading.Event,
-              on_clip=lambda _p, _s: None) -> list[Path]:
-    """Scannt ein Video; progress(0..1) für diese Datei, on_clip(pfad, segment) je geschnittenem Clip."""
+              on_clip=lambda _p, _s: None, deaths_only=False) -> list[Path]:
+    """Scannt ein Video; progress(0..1) für diese Datei, on_clip(pfad, segment) je geschnittenem Clip.
+
+    deaths_only: nur eigene Tode suchen, jeder Tod ein eigener Clip (Modus „Tode suchen“).
+    """
     preset = Preset.load(cfg.preset)
-    events = {"kill", "death"} if cfg.clip_deaths else {"kill"}
+    if deaths_only:
+        events = {"death"}
+    else:
+        events = {"kill", "death"} if cfg.clip_deaths else {"kill"}
     detector = Detector(preset, events, cfg.detect_mode)
-    segmenter = Segmenter(cfg.pre_s, cfg.post_s, join_overlap=True)
+    if not detector.states:
+        raise RuntimeError("Im Preset fehlt die Tod-Erkennung")
+    segmenter = Segmenter(cfg.pre_s, cfg.post_s, join_overlap=not deaths_only)
     length = clips.duration(path)
-    started = recording_start(path, length)
+    started = recording_start(path, length, cfg.pre_s)
     out_dir.mkdir(parents=True, exist_ok=True)
     segments = []
 
@@ -128,10 +140,11 @@ def _load_manifest(out_dir: Path) -> dict:
 
 
 def scan_many(files: list[Path], out_dir: Path, cfg: Config, log, progress, cancel: threading.Event,
-              on_clip=lambda _p, _s: None, skip_done=True) -> int:
+              on_clip=lambda _p, _s: None, skip_done=True, deaths_only=False) -> int:
     """Scannt mehrere Videos nach out_dir. progress(dict) mit Gesamtstand und Restzeit.
 
     Bereits gescannte Dateien (gleiche Größe) stehen in out_dir/.killclip.json und werden übersprungen.
+    Die Tode-Suche trägt nichts ins Manifest ein (sonst überspringt der Kill-Scan die Datei später).
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest = _load_manifest(out_dir)
@@ -163,7 +176,7 @@ def scan_many(files: list[Path], out_dir: Path, cfg: Config, log, progress, canc
                       "total": len(todo), "eta": eta})
 
         try:
-            written = scan_file(path, cfg, out_dir, log, file_progress, cancel, on_clip)
+            written = scan_file(path, cfg, out_dir, log, file_progress, cancel, on_clip, deaths_only)
         except Exception as exc:
             log(f"✖ {path.name}: {exc}")
             written = None
@@ -172,7 +185,9 @@ def scan_many(files: list[Path], out_dir: Path, cfg: Config, log, progress, canc
         done_len += lengths[path]
         if written is not None:
             total_clips += len(written)
-            log(f"{path.name}: {len(written)} Clip(s)")
+            log(f"{path.name}: {len(written)} {'Tod-' if deaths_only else ''}Clip(s)")
+            if deaths_only:
+                continue
             manifest[str(path)] = path.stat().st_size
             (out_dir / MANIFEST).write_text(json.dumps(manifest, indent=1, ensure_ascii=False), encoding="utf-8")
     return total_clips
