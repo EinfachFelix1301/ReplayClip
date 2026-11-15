@@ -16,6 +16,8 @@ import webview
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 UI_FILE = Path(getattr(sys, "_MEIPASS", ROOT)) / "killclip" / "ui" / "index.html"
+ICON_FILE = Path(getattr(sys, "_MEIPASS", ROOT)) / "assets" / "killclip.ico"
+APP_ID = "einfachfelix.KillClip"
 WEB_DATA = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "KillClip" / "webview"
 
 from killclip import autoedit, beats, clips, marker, montage, ncs, obs, preview, titlecard  # noqa: E402
@@ -475,6 +477,34 @@ def self_test() -> str:
     return "\n".join(lines)
 
 
+def _use_app_icon():
+    """Eigene Taskleisten-Gruppe statt Python-Symbol (pythonw)."""
+    try:
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+    except Exception:
+        pass
+
+
+def _set_window_icon(window):
+    """KillClip-Icon für Fenster + Taskleiste (WM_SETICON auf das WinForms-Fenster)."""
+    if not ICON_FILE.is_file():
+        return
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        user32.LoadImageW.restype = ctypes.c_void_p
+        user32.SendMessageW.argtypes = (ctypes.c_void_p, ctypes.c_uint, ctypes.c_void_p, ctypes.c_void_p)
+        hwnd = ctypes.c_void_p(window.native.Handle.ToInt64())
+        for which, size in ((1, 256), (0, 16)):         # ICON_BIG, ICON_SMALL
+            # 0x10 = LR_LOADFROMFILE, 1 = IMAGE_ICON
+            hicon = user32.LoadImageW(None, str(ICON_FILE), 1, size, size, 0x10)
+            if hicon:
+                user32.SendMessageW(hwnd, 0x0080, ctypes.c_void_p(which), ctypes.c_void_p(hicon))  # WM_SETICON
+    except Exception:
+        pass
+
+
 def main():
     if "--self-test" in sys.argv:
         out = Path(sys.executable).parent / "selftest.txt"
@@ -483,6 +513,7 @@ def main():
         except Exception as exc:
             out.write_text(f"FEHLER: {exc!r}", encoding="utf-8")
         return
+    _use_app_icon()
     api = Api()
     window = webview.create_window(
         "KillClip", url=str(UI_FILE), js_api=api,
@@ -490,6 +521,7 @@ def main():
         minimized="--minimized" in sys.argv)
     api._window = window
     window.events.closing += api._shutdown
+    window.events.shown += lambda: _set_window_icon(window)
 
     # Videos per Drag & Drop auf die Verknüpfung -> direkt scannen
     dropped = [Path(a) for a in sys.argv[1:] if Path(a).is_file()]

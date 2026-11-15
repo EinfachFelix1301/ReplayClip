@@ -28,6 +28,8 @@ def main():
         "--name", "KillClip", "--distpath", str(WORK / "dist"), "--workpath", str(WORK / "build"),
         "--specpath", str(WORK),
         "--add-data", f"{ROOT / 'killclip' / 'ui'};killclip/ui",
+        "--add-data", f"{ROOT / 'assets' / 'killclip.ico'};assets",
+        "--icon", str(ROOT / "assets" / "killclip.ico"),
         *[a for n in ("ffmpeg.exe", "ffprobe.exe", "LICENSE") for a in ("--add-binary", f"{ff / n};bin")],
         "--collect-submodules", "winrt", "--hidden-import", "webview.platforms.winforms",
         str(ROOT / "KillClip.pyw"),
