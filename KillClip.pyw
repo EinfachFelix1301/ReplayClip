@@ -341,10 +341,9 @@ class Api:
             path = None
             try:
                 self._log(f"Montage: {len(items)} Clip(s){' + Musik' if music else ''}")
-                if auto:
-                    auto = {**auto, "preset": self._cfg.preset, "pre_s": self._cfg.pre_s}
+                opts = {**auto, "preset": self._cfg.preset, "pre_s": self._cfg.pre_s} if auto else None
                 path = montage.render(items, Path(self._cfg.output_dir), music, float(music_vol), float(game_vol),
-                                      self._log, lambda p: self._emit(type="progress", **p), self._cancel, auto)
+                                      self._log, lambda p: self._emit(type="progress", **p), self._cancel, opts)
                 msg = f"Montage gespeichert: {path.name}" if path else "Montage abgebrochen"
             except Exception as exc:
                 msg = f"Montage-Fehler: {exc}"
