@@ -5,6 +5,7 @@ import json
 import os
 import re
 import subprocess
+import shutil
 import sys
 import threading
 import time
@@ -538,6 +539,8 @@ def main():
         window.events.loaded += lambda: api._start_scan(dropped, Path(api._cfg.output_dir), skip_done=False)
 
     WEB_DATA.mkdir(parents=True, exist_ok=True)
+    # WebView hebt die Oberfläche im Cache auf – nach einem Update käme sonst die alte Seite
+    shutil.rmtree(WEB_DATA / "EBWebView" / "Default" / "Cache", ignore_errors=True)
     webview.start(private_mode=False, storage_path=str(WEB_DATA))
 
 
