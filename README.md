@@ -51,5 +51,7 @@ Es greift **nicht** ins Spiel ein: kein Einlesen von Spielspeicher, keine Inject
 - FFmpeg ist **nicht** enthalten (beim Build aus einer eigenen FFmpeg-Installation, LGPL/GPL, ffmpeg.org).
 - Musik-Suche nutzt [NoCopyrightSounds](https://ncs.io) – Tracks sind frei für Videos, **Quellenangabe Pflicht**
   (KillClip legt sie als `.txt` neben die Musik). Es werden keine Musikdateien mitgeliefert.
+- Musik per Link (SoundCloud u. a., über [yt-dlp](https://github.com/yt-dlp/yt-dlp)): nur Titel laden, die du
+  nutzen darfst. Geschützte Songs werden auf TikTok/YouTube stummgeschaltet oder gesperrt.
 - ZenoCity-Logo: gehört ZenoCity (zenocity.cc). GTA V / FiveM sind Marken ihrer jeweiligen Inhaber;
   KillClip ist ein inoffizielles Fan-Tool und steht in keiner Verbindung zu Rockstar Games, Take-Two oder Cfx.re.

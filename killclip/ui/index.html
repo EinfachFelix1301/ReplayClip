@@ -416,6 +416,10 @@
             <button class="btn small" id="mNcs" title="Frei nutzbare Musik (NCS) suchen und direkt übernehmen">Musik suchen</button>
             <button class="btn small" id="mMusicClear" hidden>Entfernen</button>
           </div>
+          <div class="ncs-bar" style="margin-top:8px">
+            <input id="mLink" placeholder="Oder Link einfügen (SoundCloud …)" spellcheck="false">
+            <button class="btn small" id="mLinkGo">Laden</button>
+          </div>
           <div class="music-name" id="mMusicName" style="margin-top:8px">Keine Musik – nur Spielsound</div>
           <label class="slider"><span>Musik</span><input type="range" id="mMusicVol" min="0" max="100" value="60"><span id="mMusicVolV">60 %</span></label>
           <label class="slider"><span>Spielsound</span><input type="range" id="mGameVol" min="0" max="100" value="90"><span id="mGameVolV">90 %</span></label>
@@ -964,6 +968,17 @@ async function showBeat() {
 }
 $("mMusic").onclick = async () => {
   const r = await api().pick_music(); if (r) setMusic(r);
+};
+
+$("mLink").onkeydown = (e) => { if (e.key === "Enter") $("mLinkGo").click(); };
+$("mLinkGo").onclick = async () => {
+  const url = $("mLink").value.trim(), btn = $("mLinkGo");
+  if (!url || btn.disabled) return;
+  btn.disabled = true; btn.textContent = "Lade …";
+  const res = await api().music_link(url);
+  btn.disabled = false; btn.textContent = "Laden";
+  if (!res.ok) return toast(res.msg);
+  $("mLink").value = ""; setMusic(res); toast(`Musik: ${res.name}`);
 };
 
 // Musik suchen (NCS)

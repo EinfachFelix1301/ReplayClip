@@ -20,7 +20,7 @@ ICON_FILE = Path(getattr(sys, "_MEIPASS", ROOT)) / "assets" / "killclip.ico"
 APP_ID = "einfachfelix.KillClip"
 WEB_DATA = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "KillClip" / "webview"
 
-from killclip import autoedit, beats, clips, marker, montage, ncs, obs, preview, titlecard  # noqa: E402
+from killclip import autoedit, beats, clips, link, marker, montage, ncs, obs, preview, titlecard  # noqa: E402
 from killclip.batch import (KILLS_DIR, _load_manifest, find_clips, find_videos, is_own_extra,  # noqa: E402
                             retrim_many, scan_many)
 from killclip.config import Config, key_name  # noqa: E402
@@ -318,6 +318,15 @@ class Api:
         except Exception as exc:
             return {"ok": False, "msg": f"Download fehlgeschlagen: {exc}"}
         self._log(f"Musik geladen: {path.name} (Quellenangabe liegt daneben als .txt)")
+        return {"ok": True, "path": str(path), "name": path.name, "url": self._media.url(path)}
+
+    def music_link(self, url: str):
+        """Musik von einem Link (SoundCloud & Co.) in den Musik-Ordner laden."""
+        try:
+            path = link.download(url, Path(self._cfg.output_dir) / "Musik")
+        except Exception as exc:
+            return {"ok": False, "msg": f"Link geht nicht: {exc}"}
+        self._log(f"Musik geladen: {path.name}")
         return {"ok": True, "path": str(path), "name": path.name, "url": self._media.url(path)}
 
     def render_montage(self, items: list, music: str | None, music_vol: float, game_vol: float, auto=None):
