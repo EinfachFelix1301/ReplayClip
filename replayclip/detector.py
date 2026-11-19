@@ -208,7 +208,7 @@ class _TriggerState:
 
 
 DETECT_KINDS = {"notify": {"ocr"}, "killdot": {"template"}, "beide": {"ocr", "template"}}
-SAME_KILL_S = 6.0       # Killdot und Kill-Meldung innerhalb dieser Zeit = derselbe Kill (Meldung kommt bei Zeno bis ~5 s später)
+SAME_KILL_S = 6.0       # Killdot und Kill-Meldung innerhalb dieser Zeit = derselbe Kill (Meldung kommt bei manchen Servern bis ~5 s später)
 
 
 class Detector:

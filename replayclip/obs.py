@@ -105,7 +105,7 @@ class ObsClient:
         auth = hello.get("authentication")
         if auth:
             if not self.password:
-                raise ObsError("OBS verlangt ein Passwort – in KillClip unter Einstellungen eintragen")
+                raise ObsError("OBS verlangt ein Passwort – in ReplayClip unter Einstellungen eintragen")
             secret = _b64sha(self.password + auth["salt"])
             identify["authentication"] = _b64sha(secret + auth["challenge"])
         self._send(1, identify)
@@ -173,7 +173,7 @@ class ObsClient:
                 self.request("SetProfileParameter", {"parameterCategory": cat, "parameterName": name,
                                                      "parameterValue": value})
         current = self.request("GetProfileList")["currentProfileName"]
-        helper = "KillClip-Neuladen"
+        helper = "ReplayClip-Neuladen"
         try:
             self.request("CreateProfile", {"profileName": helper})     # wechselt automatisch dorthin
             time.sleep(1.0)
@@ -210,7 +210,7 @@ class ObsClient:
         """Leere Szene = schwarze Clips. Dann eine Bildschirmaufnahme anlegen."""
         scene = self.request("GetCurrentProgramScene")["currentProgramSceneName"]
         if not self.request("GetSceneItemList", {"sceneName": scene}).get("sceneItems"):
-            self.request("CreateInput", {"sceneName": scene, "inputName": "KillClip Bildschirm",
+            self.request("CreateInput", {"sceneName": scene, "inputName": "ReplayClip Bildschirm",
                                          "inputKind": "monitor_capture", "inputSettings": {}})
             return True
         return False

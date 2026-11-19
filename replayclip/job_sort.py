@@ -77,7 +77,7 @@ def _contains(text_key: str, words: list[str], key: str) -> bool:
     return key in text_key or any(SequenceMatcher(None, key, w).ratio() >= 0.8 for w in words if len(w) >= 4)
 
 
-def detect_job(path, preset: str = "zenocity", root=None) -> str | None:
+def detect_job(path, preset: str = "beispiel", root=None) -> str | None:
     known = known_jobs(preset, root) if root else []
     cap = cv2.VideoCapture(str(path))
     known_votes, free_votes = Counter(), Counter()
@@ -120,7 +120,7 @@ def safe_dir_name(job: str) -> str:
     return re.sub(r'[\\/:*?"<>|]+', "", job).strip(" .")[:40]
 
 
-def sort_clip(path, output_dir, log=print, preset: str = "zenocity"):
+def sort_clip(path, output_dir, log=print, preset: str = "beispiel"):
     path = Path(path).resolve()
     root = Path(output_dir).resolve()
     # Nie ein Original-Replay oder fremdes Video verschieben – nur eigene Clips im Ausgabeordner

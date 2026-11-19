@@ -1,4 +1,4 @@
-"""Erzeugt das KillClip-App-Icon (assets/killclip.ico + killclip.png).
+"""Erzeugt das ReplayClip-App-Icon (assets/replayclip.ico + replayclip.png).
 
 Motiv: rotes Fadenkreuz (Kill) mit Play-Dreieck in der Mitte (Clip) auf dunklem Rund-Quadrat.
 Aufruf: python tools/make_icon.py
@@ -81,10 +81,10 @@ def render():
 def main():
     OUT.mkdir(exist_ok=True)
     big = render()
-    big.resize((512, 512), Image.LANCZOS).save(OUT / "killclip.png")
+    big.resize((512, 512), Image.LANCZOS).save(OUT / "replayclip.png")
     sizes = [16, 20, 24, 32, 40, 48, 64, 128, 256]
-    big.resize((256, 256), Image.LANCZOS).save(OUT / "killclip.ico", sizes=[(s, s) for s in sizes])
-    print("geschrieben:", OUT / "killclip.ico", OUT / "killclip.png")
+    big.resize((256, 256), Image.LANCZOS).save(OUT / "replayclip.ico", sizes=[(s, s) for s in sizes])
+    print("geschrieben:", OUT / "replayclip.ico", OUT / "replayclip.png")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""KillClip – clippt FiveM-Kills automatisch (live über NVIDIA Instant Replay) und aus Aufnahmen."""
+"""ReplayClip – clippt FiveM-Kills automatisch (live über NVIDIA Instant Replay) und aus Aufnahmen."""
 import base64
 import hashlib
 import json
@@ -16,21 +16,21 @@ import webview
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
-UI_FILE = Path(getattr(sys, "_MEIPASS", ROOT)) / "killclip" / "ui" / "index.html"
-ICON_FILE = Path(getattr(sys, "_MEIPASS", ROOT)) / "assets" / "killclip.ico"
-APP_ID = "einfachfelix.KillClip"
-WEB_DATA = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "KillClip" / "webview"
+UI_FILE = Path(getattr(sys, "_MEIPASS", ROOT)) / "replayclip" / "ui" / "index.html"
+ICON_FILE = Path(getattr(sys, "_MEIPASS", ROOT)) / "assets" / "replayclip.ico"
+APP_ID = "einfachfelix.ReplayClip"
+WEB_DATA = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "ReplayClip" / "webview"
 
-from killclip import autoedit, beats, clips, link, marker, montage, ncs, obs, preview, titlecard  # noqa: E402
-from killclip.batch import (KILLS_DIR, _load_manifest, find_clips, find_videos, is_own_extra,  # noqa: E402
+from replayclip import autoedit, beats, clips, link, marker, montage, ncs, obs, preview, titlecard  # noqa: E402
+from replayclip.batch import (KILLS_DIR, _load_manifest, find_clips, find_videos, is_own_extra,  # noqa: E402
                             retrim_many, scan_many)
-from killclip.config import Config, key_name  # noqa: E402
-from killclip.job_sort import job_dirs  # noqa: E402
-from killclip.detector import list_presets  # noqa: E402
-from killclip.live import LiveClipper  # noqa: E402
-from killclip.media import MediaServer  # noqa: E402
+from replayclip.config import Config, key_name  # noqa: E402
+from replayclip.job_sort import job_dirs  # noqa: E402
+from replayclip.detector import list_presets  # noqa: E402
+from replayclip.live import LiveClipper  # noqa: E402
+from replayclip.media import MediaServer  # noqa: E402
 
-THUMB_DIR = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "KillClip" / "thumbs"
+THUMB_DIR = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "ReplayClip" / "thumbs"
 CLIP_NAME = re.compile(r"^(?P<label>kill\d*(?:_death)?|death)_(?P<ts>\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})")
 
 
@@ -469,8 +469,8 @@ class Api:
 
 def self_test() -> str:
     """Für die gepackte EXE: prüft Abhängigkeiten ohne Fenster (Ergebnis in selftest.txt)."""
-    from killclip import ocr
-    from killclip.detector import Detector, Preset
+    from replayclip import ocr
+    from replayclip.detector import Detector, Preset
     import dxcam  # noqa: F401
     import numpy as np
     lines = [f"ffmpeg: {clips.tool('ffmpeg')}", f"ffprobe: {clips.tool('ffprobe')}"]
@@ -496,7 +496,7 @@ def _use_app_icon():
 
 
 def _set_window_icon(window):
-    """KillClip-Icon für Fenster + Taskleiste (WM_SETICON auf das WinForms-Fenster)."""
+    """ReplayClip-Icon für Fenster + Taskleiste (WM_SETICON auf das WinForms-Fenster)."""
     if not ICON_FILE.is_file():
         return
     try:
@@ -525,7 +525,7 @@ def main():
     _use_app_icon()
     api = Api()
     window = webview.create_window(
-        "KillClip", url=str(UI_FILE), js_api=api,
+        "ReplayClip", url=str(UI_FILE), js_api=api,
         width=1200, height=780, min_size=(940, 620), background_color="#09090b",
         minimized="--minimized" in sys.argv)
     api._window = window

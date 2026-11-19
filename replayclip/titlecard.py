@@ -5,7 +5,7 @@ Ablauf in der Zeit des Titel-Fensters:
   Aufprall         weißer Flash, Lichtstrahlen, Wackeln, das schräge Band zieht auf
   Halten           Glanz-Streifen läuft über den Text, zwei kurze Glitches
   Raus (0.12 s)    Zoom 1→1.12, RGB-Split, ausblenden
-Farben/Schrift/Logo kommen aus dem Preset ("intro"), Standard = Zeno (Neon-Violett, Chakra Petch).
+Farben/Schrift/Logo kommen aus dem Preset ("intro"), Standard = Neon-Violett, Chakra Petch.
 """
 import base64
 import io
@@ -73,7 +73,7 @@ def _keyed_logo(path: Path, size: int) -> Image.Image | None:
 class TitleCard:
     """Baut die statischen Ebenen einmal; frame(t) setzt sie animiert zusammen."""
 
-    def __init__(self, text: str, subtitle: str, duration: float, preset: str = "zenocity"):
+    def __init__(self, text: str, subtitle: str, duration: float, preset: str = "beispiel"):
         st = _style(preset)
         self.duration = max(0.6, duration)
         self.col, self.deep, self.subcol = _rgb(st["color"]), _rgb(st["deep"]), _rgb(st["sub_color"])
@@ -234,7 +234,7 @@ class TitleCard:
         return out
 
 
-def render(text: str, subtitle: str, duration: float, dst: Path, preset: str = "zenocity") -> Path:
+def render(text: str, subtitle: str, duration: float, dst: Path, preset: str = "beispiel") -> Path:
     """Titelkarte als transparentes Video (QuickTime-RLE mit Alpha) für den overlay-Filter."""
     card = TitleCard(text, subtitle, duration, preset)
     n = max(1, int(round(card.duration * FPS)))
@@ -252,7 +252,7 @@ def render(text: str, subtitle: str, duration: float, dst: Path, preset: str = "
     return dst
 
 
-def preview_png(text: str, subtitle: str, preset: str = "zenocity") -> str:
+def preview_png(text: str, subtitle: str, preset: str = "beispiel") -> str:
     """Standbild (Halte-Phase) für die Vorschau in der App – als data:-URL."""
     card = TitleCard(text, subtitle, 1.4, preset)
     img = card.frame(0.6)

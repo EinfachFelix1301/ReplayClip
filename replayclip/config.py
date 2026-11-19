@@ -6,7 +6,7 @@ import winreg
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
-# Als EXE: Einstellungen + Presets neben KillClip.exe (portabel), sonst im Projektordner
+# Als EXE: Einstellungen + Presets neben ReplayClip.exe (portabel), sonst im Projektordner
 ROOT = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
 CONFIG_PATH = ROOT / "config.json"
 PRESET_DIR = ROOT / "presets"
@@ -59,7 +59,7 @@ def nvidia_defaults():
 
 @dataclass
 class Config:
-    preset: str = "zenocity"
+    preset: str = "beispiel"
     detect_mode: str = "beide"      # "beide" (X oder Meldung reicht), "killdot" (rotes X) oder "notify" (Meldung)
     pre_s: float = 20.0
     post_s: float = 20.0
@@ -67,7 +67,7 @@ class Config:
     live_enabled: bool = True
     live_fps: float = 2.0
     monitor: int = 0
-    output_dir: str = str(Path.home() / "Videos" / "KillClips")
+    output_dir: str = str(Path.home() / "Videos" / "ReplayClips")
     delete_replay_after_cut: bool = True
     replay_dir: str = ""
     replay_buffer_s: int = 0
