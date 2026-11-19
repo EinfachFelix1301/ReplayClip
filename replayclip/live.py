@@ -353,7 +353,7 @@ class LiveClipper(threading.Thread):
                 # Hotkey frisch aus der NVIDIA App – Änderung (z. B. auf Einfg) gilt ohne Neustart
                 hotkey = nvidia_hotkey() or self.cfg.replay_hotkey
                 if hotkey != self.cfg.replay_hotkey:
-                    self.log(f"NVIDIA-Hotkey geändert – KillClip drückt jetzt {'+'.join(map(key_name, hotkey))}")
+                    self.log(f"NVIDIA-Hotkey geändert – ReplayClip drückt jetzt {'+'.join(map(key_name, hotkey))}")
                     self.cfg.replay_hotkey = hotkey
                 deadline = time.monotonic() + 30.0
                 waiting = False

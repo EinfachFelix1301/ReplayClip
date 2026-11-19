@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<title>KillClip</title>
+<title>ReplayClip</title>
 <style>
   :root {
     --bg: #09090b;
@@ -435,7 +435,7 @@
             <option value="teaser">Teaser (schnelle Kills, dann Titel, dann Drop)</option>
             <option value="kein">Kein Intro (direkt rein)</option>
             <option value="titel">Nur Titel (länger, ruhig)</option></select></label>
-          <label class="opt"><span>Intro-Text</span><input id="mIntro" maxlength="40" value="ZENOCITY" placeholder="leer = kein Titel"></label>
+          <label class="opt"><span>Intro-Text</span><input id="mIntro" maxlength="40" value="" placeholder="Titel (leer = kein Titel)"></label>
           <div class="note">„Auf den Beat“: Der erste Kill landet genau auf dem Drop, jeder weitere auf einem Takt. Geschnitten wird im Takt, mit Intro und Abblende. Die Vorschau oben zeigt die Clips ungeschnitten.</div>
         </div>
       </div>
@@ -487,7 +487,7 @@
       <div class="spacer"></div>
       <button class="icon-btn" id="ncsClose" title="Schließen">✕</button>
     </div>
-    <p class="mhint">NoCopyrightSounds: frei nutzbar auf TikTok, YouTube und Co. Die Quellenangabe für die Videobeschreibung legt KillClip automatisch neben die Montage.</p>
+    <p class="mhint">NoCopyrightSounds: frei nutzbar auf TikTok, YouTube und Co. Die Quellenangabe für die Videobeschreibung legt ReplayClip automatisch neben die Montage.</p>
     <div class="ncs-bar">
       <input id="ncsQ" placeholder="Titel oder Artist (leer = Neueste)">
       <select id="ncsGenre"></select>
@@ -666,7 +666,7 @@ function applySettings(s) {
   const n = $("replayNote");
   if (s.clip_source === "obs") {
     n.className = "note";
-    n.replaceChildren("OBS muss laufen. Den Replay-Puffer startet KillClip selbst (und schaltet ihn bei Bedarf ein, 3 min).");
+    n.replaceChildren("OBS muss laufen. Den Replay-Puffer startet ReplayClip selbst (und schaltet ihn bei Bedarf ein, 3 min).");
   } else if (s.replay_buffer_s < 120) {
     n.className = "note warn";
     n.replaceChildren(`Instant Replay ist auf `, h("b", {}, `${s.replay_buffer_s} s`),

@@ -77,7 +77,7 @@ def _add_music(video: Path, music: Path, music_vol: float, game_vol: float, dst:
           "-c:a", "aac", "-b:a", "192k", "-t", f"{length:.3f}", "-movflags", "+faststart", str(dst)])
 
 
-SPED_DIR = Path(os.environ.get("LOCALAPPDATA", ".")) / "KillClip" / "sped"
+SPED_DIR = Path(os.environ.get("LOCALAPPDATA", ".")) / "ReplayClip" / "sped"
 
 
 def sped_up(music: str, speed: float) -> str:
@@ -135,7 +135,7 @@ def render(items: list[dict], out_dir: Path, music: str | None, music_vol: float
             if not items:
                 raise ValueError("Keine Clips übrig")
             done = autoedit.render(items, music, music_vol, game_vol, auto.get("style", "clean"),
-                                   auto.get("intro", ""), auto.get("preset", "zenocity"), float(auto.get("pre_s", 10)),
+                                   auto.get("intro", ""), auto.get("preset", "beispiel"), float(auto.get("pre_s", 10)),
                                    tmp, target, log, progress, cancel, auto.get("intro_mode", "teaser"))
             if done:
                 _copy_credit(credit_src, done)

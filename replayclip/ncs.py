@@ -7,7 +7,7 @@ from pathlib import Path
 
 GENRES = {"Phonk": 16, "Brazilian Phonk": 26, "Trap": 14, "Drum & Bass": 3, "Dubstep": 5,
           "Bass": 1, "Hardstyle": 9, "House": 10, "Alle": ""}
-_UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) KillClip"}
+_UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ReplayClip"}
 _ATTR = re.compile(r'data-url="(https[^"]+\.mp3)"')
 
 

@@ -24,7 +24,7 @@ _NV_NAME = re.compile(r"(\d{4})\.(\d{2})\.(\d{2}) - (\d{2})\.(\d{2})\.(\d{2})")
 def recording_start(path: Path, length: float, pre_s: float = 0.0) -> datetime:
     clip_t = clips.clip_time(path)
     if clip_t:
-        # eigener KillClip-Clip: heißt nach dem ersten Kill, beginnt Vorlauf-Sekunden davor
+        # eigener ReplayClip-Clip: heißt nach dem ersten Kill, beginnt Vorlauf-Sekunden davor
         return clip_t - timedelta(seconds=pre_s)
     m = _NV_NAME.search(path.name)
     if m:
@@ -67,7 +67,7 @@ def iter_frames(path: Path, fps: float, cancel: threading.Event):
 
 VIDEO_EXT = {".mp4", ".mkv", ".mov"}
 KILLS_DIR = "Kills"
-MANIFEST = ".killclip.json"
+MANIFEST = ".replayclip.json"
 
 
 def scan_file(path: Path, cfg: Config, out_dir: Path, log, progress, cancel: threading.Event,
@@ -160,8 +160,8 @@ def scan_many(files: list[Path], out_dir: Path, cfg: Config, log, progress, canc
               on_clip=lambda _p, _s: None, skip_done=True, deaths_only=False) -> int:
     """Scannt mehrere Videos nach out_dir. progress(dict) mit Gesamtstand und Restzeit.
 
-    Bereits gescannte Dateien (gleiche Größe) stehen in out_dir/.killclip.json und werden übersprungen.
-    Die Tode-Suche hat ihr eigenes Gedächtnis in out_dir/Tode/.killclip.json.
+    Bereits gescannte Dateien (gleiche Größe) stehen in out_dir/.replayclip.json und werden übersprungen.
+    Die Tode-Suche hat ihr eigenes Gedächtnis in out_dir/Tode/.replayclip.json.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest = _load_manifest(out_dir, deaths_only)

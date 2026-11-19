@@ -1,5 +1,5 @@
 {
-  "name": "ZenoCity",
+  "name": "Beispiel-Server",
   "triggers": [
     {
       "event": "kill",
@@ -41,7 +41,7 @@
     {
       "event": "kill",
       "kind": "template",
-      "template": "zenocity_killdot.png",
+      "template": "beispiel_killdot.png",
       "ref_height": 720,
       "match": 0.55,
       "region": [
@@ -118,7 +118,7 @@
     }
   ],
   "intro": {
-    "logo": "zenocity_logo.png",
+    "logo": "",
     "font": "chakra-petch-700.ttf",
     "font_sub": "chakra-petch-600.ttf",
     "color": "#c300ff",
